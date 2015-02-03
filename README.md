@@ -13,6 +13,10 @@
 |  建议    |   推荐使用的方式             | 
 |  不建议  |   不推荐使用的方式             | 
 
+##代码规范
+- php代码遵循PSR-2规范 
+  参见地址https://github.com/hfcorriez/fig-standards/blob/zh_CN/%E6%8E%A5%E5%8F%97/PSR-2-coding-style-guide.md
+
 ##目录结构
 - components: 功能独立的组件库
 - vendors: 第三方库

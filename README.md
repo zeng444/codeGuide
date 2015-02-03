@@ -11,6 +11,17 @@
 |  禁止    |   绝对不允许的行为          |
 |  必须    |   需要按照标准执行的行为 |
 |  建议    |   推荐使用的方式             | 
+|  不建议  |   不推荐使用的方式             | 
+
+##代码规范
+- php代码遵循PSR-2规范 
+  参见地址https://github.com/hfcorriez/fig-standards/blob/zh_CN/%E6%8E%A5%E5%8F%97/PSR-2-coding-style-guide.md
+
+##目录结构
+- components: 功能独立的组件库
+- vendors: 第三方库
+- extensions: Yii原生类的拓展
+- classes: 业务逻辑及其它类
 
 ## Controller
 
@@ -50,6 +61,10 @@ $model::model()->getConnection()->createCommand()
 - **禁止**在控制器内撰写复杂业务逻辑，控制器只能放和当前渲染数据强藕合的方法，比如处理页面输出结构、封装API数据节点等。
 - 出现控制器大量逻辑代码的处理方式，**建议**在控制器内引入actions，或behaviors万，允许少量逻辑代码在控制器内定义private 方法（是否应该禁止？）
 - 对控制器action方法限制和过滤，**建议**使用filters控制,最好不要使用__construct中处理
+- **禁止**在controller中拼接大段的html代码，如需要较长的html代码，**必须**使用模板
+```
+$partialContent = $this->render('partial', $data, true);
+```
 
 ### ActiveRecord
 
@@ -149,11 +164,33 @@ $this->attachEventHandler("onBeforeFind",array($this,"xxx");
 
 
 ## Widget
-
+- **建议**将同一widget的controller和view放在一个单独的文件目录下
+- **建议**使用twig模板
 
 
 
 
 ## Views
+- **禁止**包含操作和查询数据库的代码, 应使用model中的属性和方法
+- **不建议**直接访问$_GET, $_POST或其他类似变量, **建议**放在controller处理
+- 包含大量业务逻辑的片段**必须**使用widget将代码提取出来
 
 ## Code Guide
+- **禁止**使用@屏蔽错误 
+- **建议**字符串使用单引号包裹
+- 定义和使用数组时, key值**必须**用单引号包裹
+- 变量名**必须**表明其含义, **禁止**使用意义不明的缩写
+```
+$productPrice; 
+$p_r; //禁止
+```
+- 变量使用之前**必须**定义, 在条件语句中定义的变量**建议**, 在if之前提前申明
+```
+$a=''; //提前申明
+if ($condition) {
+  $a = 'value';
+}
+$b = $a;
+```
+- 复杂逻辑的函数和方法**必须**添加注释
+- 每一小段逻辑之间**建议**使用空行分割

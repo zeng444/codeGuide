@@ -11,6 +11,13 @@
 |  禁止    |   绝对不允许的行为          |
 |  必须    |   需要按照标准执行的行为 |
 |  建议    |   推荐使用的方式             | 
+|  不建议  |   不推荐使用的方式             | 
+
+##目录结构
+- components: 功能独立的组件库
+- vendors: 第三方库
+- extensions: Yii原生类的拓展
+- classes: 业务逻辑及其它类
 
 ## Controller
 
@@ -50,6 +57,10 @@ $model::model()->getConnection()->createCommand()
 - **禁止**在控制器内撰写复杂业务逻辑，控制器只能放和当前渲染数据强藕合的方法，比如处理页面输出结构、封装API数据节点等。
 - 出现控制器大量逻辑代码的处理方式，**建议**在控制器内引入actions，或behaviors万，允许少量逻辑代码在控制器内定义private 方法（是否应该禁止？）
 - 对控制器action方法限制和过滤，**建议**使用filters控制,最好不要使用__construct中处理
+- **禁止**在controller中拼接大段的html代码，如需要较长的html代码，**必须**使用模板
+```
+$partialContent = $this->render('partial', $data, true);
+```
 
 ### ActiveRecord
 
@@ -148,7 +159,8 @@ $this->attachEventHandler("onBeforeFind",array($this,"xxx");
 
 
 ## Widget
-
+- **建议**将同一widget的controller和view放在一个单独的文件目录下
+- **建议**使用twig模板
 
 
 

@@ -119,6 +119,7 @@ $model::model()->dbConnection
 ->createComand("select * from  table where id=1 limit 1")
 ->queryRow();
 ```
+- 使用ar方法获取数据表数据时find、findAll，**建议**定义"select"的列条件（这个看需要不，以后流量大，比较容易造成数据拥堵）
 
 - 对日期字段update create类型的字段，尽可能使用dateAttribute()实现自动处理 
 

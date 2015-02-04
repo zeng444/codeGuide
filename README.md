@@ -18,16 +18,18 @@
 
 ### 数据与处理
 
-- 对接收的数据处理，**必须**使用YII提供的方法，预防变量unset抛出的notice错误
+- **禁止**再控制器内直接用_GET _POST获取数据
+- 对接收的数据处理，**必须**使用YII提供的方法，Yii::app->getRequest()，预防变量unset抛出的notice错误
+- 对$_SERVERS全局变量的处理，**建议**使用Yii::app->request对象下的方法
 
 ```
 Yii::app()->getRequest()->getQuery("id");
 Yii::app()->getRequest()->postQuery("id");
 Yii::app()->getRequest()->getParam("id");
 ```
-- 禁止在析构和构造函数内获取任何模型数据同理包括beforeAcion afterAction(难以扩展，API接口重灾区)
-- 对$_SERVERS全局变量的处理，**建议**使用Yii::app->request对象下的方法
-- 控制器接收的数据，**禁止**在控制器内做验证，应该在Model（CformModel或者CActiveRecord）对象下的Rule规则处理
+
+- **禁止**在析构和构造函数内获取任何模型数据，同理包括beforeAcion afterAction(难以扩展，API接口重灾区) 
+- 控制器接收的数据，模型相关的数据验证，**禁止**在控制器内，应该在Model（CformModel或者CActiveRecord）对象下的Rule规则处理
 
 
 ```
@@ -38,18 +40,17 @@ if( $model->validate() ){
 }
 ```
 
--  **禁止**在控制器内处理业务数据，比如_GET _SET类的数据加工，数据验证条件等
+-  **禁止**在控制器内处理业务数据，比如_GET _POST类的数据加工，数据验证条件等
 - **禁止**使用控制器下同一个action处理多个页面和业务逻辑（网站联盟）
-- **禁止**在控制器内撰写复杂业务逻辑，控制器只能放和当前模版渲染数据强藕合的方法，比如处理页面输出结构、封装API数据节点等。
-**禁止**在controller中拼接大段的html代码，如需要较长的html代码，**必须**使用模板
+- **禁止**在控制器内撰写复杂业务逻辑，控制器只能放和当前模版渲染数据强藕合的方法，比如处理页面输出结构、封装API数据节点等（再讨论，理想模式）。
+- **禁止**在controller中拼接大段的html代码，如需要较长的html代码，**必须**使用模板
 
 ```
 $partialContent = $this->renderPartial('partial', $data, true);
 ```
 
-- 出现控制器大量逻辑代码的处理方式，**建议**在控制器内引入actions，或behaviors，允许少量逻辑代码在控制器内定义方法（是否应该禁止？）
-- 对控制器action方法限制和过滤，**建议**使用filters控制,最好不要使用__construct中处理
- 
+- 出现控制器大量逻辑代码的处理方式，**建议**在控制器内引入actions，或behaviors，允许少量逻辑代码在控制器内定义方法, **建议** 一个action不能超过50行。（是否应该禁止？）
+
 
 
 ## Model
@@ -57,20 +58,19 @@ $partialContent = $this->renderPartial('partial', $data, true);
 
 #### 通用
 
- - 禁止在模型里处理$_GET $_POST $_COOKIE等全局变量
-
-
+ - **禁止**在模型里处理$_GET $_POST $_COOKIE $_SESSION等全局变量
+ 
+ 
 ####   继承重写
-
 
 - 业务逻辑模型**禁止**直接继承CActiveRecord、CFormModel，应该继承BaseModel
 -  BaseModel提供CActiveRecord功能的增强和作用域内的健壮度检查
--  复杂的模型，建议使用行为将方法分离（行为我们应该推广么？感觉容易把方法引用变的混乱）
+-  复杂的模型，建议使用行为将方法分离
 -  模型内使用策略时**建议**使用行为对象，但**必须**先定义interface实现，对行为对象进行约束
 
 #### Rule 
 
-- 按业务逻辑或数据库字段规则，定义验证规则，对无规则的属性要声明safe
+- 按业务逻辑，定义验证规则，对无规则的属性要声明safe
 
 ```
 //基于表字段的规则约束
@@ -83,29 +83,33 @@ array("content","safe")
 ```
 
 * 对需要定义业务逻辑验证错误信息的字段**建议**在rules里定义Message
-
+* Rule定义的message**建议**使用语言包
 
 ```
-array("title","length","max"=>"12","message"=>"This is a message!")
+array("title","length","max"=>"12","message"=>Yii::t("11111"))
 ```
 
-
-
-* 对业务逻辑明确的字段在rule定义数据预处理的方法（也可以在beforeSave处理？）
+* ***对业务逻辑明确的字段在rule定义数据预处理的方法,建议以在beforeSave处理***
 
 ```
 array("image_data","dataSerilize")
 function dataSerilize(){}
+
 ```
-- Model内操作获取对象属性**推荐**使用setAttribute getAttribute，不要直接使用对象属性方式访问
+
 - **建议**使用setAttributes()填充属性，这样能对rule的定义是否完整做验证，而不要使用setAttribute()，或者直接赋值
-- 对同字段存在不同验证规则的情况，**建议**定义场景使用多组规则（场景过多混乱的问题？）
+- 对同字段存在不同验证规则的情况，**必须**定义场景使用多组规则
+- 定义场景必须zhu shi到对象顶部，申明用途
 - 多个模型都使用的验证方法，**建议**使用新的验证类，再在个个模型rules中复用
 
 #### ActiveRocord
 
 - 查询数据后的处理，对和数据表强藕合的数据加工，**建议**使用afterFind处理，减少控制器和模版负担 （比如序列化存入的数据，一定读取后是需要反序列的）
 - 插入数据的加工**建议**在beforeSave做处理
+
+-------------------------------------
+
+- 添加修改单条数据时，**推荐**使用save方法，不推荐使用update，insert方法，会丢失Rules的验证
 - 禁止直接静态访问调用ActiveRecord下table()方法
 
 ```
@@ -129,17 +133,19 @@ $model::model()->getConnection()->createCommand()
 - 使用CDbCommand 对象获取表数据，不**建议**再使用sql构造函数,如form、order、where、limit、join 、select，因为已经够底层了，使用构造SQL函数反而带来无意义的开销
 
 ```
-//不推荐
+//推荐的方式
 $model::model()->dbConnection->createCommand()
 ->select("*")
 ->from("table")
-->where("id=1")
+->where("id=:id")
 ->limit(1)
+->param(array(':id'=>1))
 ->queryRow();
 
-//推荐
+//不推荐的方式
 $model::model()->dbConnection
-->createComand("select * from  table where id=1 limit 1")
+->createComand("select * from  table where id=:id limit 1")
+->param(array(':id'=>1))
 ->queryRow();
 ```
 
@@ -147,16 +153,17 @@ $model::model()->dbConnection
 
 - 对日期字段update create类型的字段，尽可能使用dateAttribute()实现自动处理 
 
-#### ActionRecord Relationship
+#### ActiveRecord Relationship
 
 - 必须对关系表进行定义
 - 获取关联表数据尽量使用relationship定义的方法
-- 多组的relationship
+- 多组的relationship必须再对象顶部zhu shi说明使用规则
 - 复杂条件的relationShip表关系，**推荐**定义成对象方法
 
 
 ### CFormModel
 
+- 对于多activeRecord对象藕合或者没有activeRecord属性的表单验证必须使用CformModel验证数据
 - 是否要求对表单数据处理强制formModel，把formModel作为数据验证器和表单生成器（这条讨哈，貌似会增加繁琐度，我们现在表单复用性本身不强）
 
 ## Event
@@ -181,11 +188,12 @@ $this->attachEventHandler("onBeforeFind",array($obj,"method");
 ## Widget
 
 - 禁止直接继承使用CWidget，应该使用BaseWidget继承来编写新的widget控件 
+- 禁止Widget内直接操作_GET _POST等数据
 - 每个widget应该具有独立的目录，放在application.projected.widget下，views**必须**在当前widget目录的下一级
 
 ```
 bannerWidget的目录结构为例：
-projected/widgets/bannerWidget/bannerWidget
+projected/widgets/bannerWidget/bannerWidget.php
 projected/widgets/bannerWidget/bannerWidget/views/banner.html
 ```
 - Widget **必须**符合独立的一个业务逻辑单元的特点，禁止一个Widget处理不同的业务单元
@@ -275,3 +283,6 @@ $b = $a;
 ```
 - 复杂逻辑的函数和方法**必须**添加注释
 - 每一小段逻辑之间**建议**使用空行分割
+
+互相review
+

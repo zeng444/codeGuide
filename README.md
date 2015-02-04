@@ -41,12 +41,26 @@ if( $model->validate() ){
 -  **禁止**在控制器内处理业务数据，比如_GET _SET类的数据加工，数据验证条件等
 - **禁止**使用控制器下同一个action处理多个页面和业务逻辑（网站联盟）
 - **禁止**在控制器内撰写复杂业务逻辑，控制器只能放和当前模版渲染数据强藕合的方法，比如处理页面输出结构、封装API数据节点等。
+**禁止**在controller中拼接大段的html代码，如需要较长的html代码，**必须**使用模板
+
+```
+$partialContent = $this->renderPartial('partial', $data, true);
+```
+
 - 出现控制器大量逻辑代码的处理方式，**建议**在控制器内引入actions，或behaviors，允许少量逻辑代码在控制器内定义方法（是否应该禁止？）
 - 对控制器action方法限制和过滤，**建议**使用filters控制,最好不要使用__construct中处理
+ 
+
 
 ## Model
 
-#### Extend and rewrite
+
+#### 通用
+
+ - 禁止在模型里处理$_GET $_POST $_COOKIE等全局变量
+
+
+####   继承重写
 
 
 - 业务逻辑模型**禁止**直接继承CActiveRecord、CFormModel，应该继承BaseModel
@@ -185,8 +199,11 @@ projected/widgets/bannerWidget/bannerWidget/views/banner.html
 
 - 新页面必须使用twig
 -  **禁止**在views里编写任何形式的业务逻辑
-- **禁止**使用include，复杂页面**建议**使用widget，**建议**把独立的页面渲染逻辑从controller分散到widget中
+- **禁止**使用include，复杂页面**建议**使用widget
+- **建议**把独立的页面渲染逻辑(页面展示相关逻辑)从controller分散到widget中
 - twig模版内对原始数据需要加工的，**建议**在配置文件twig组件配置里注册function或者filters
+- **不建议**直接访问$_GET, $_POST或其他类似变量, **建议**放在controller处理
+
 
 ```
 viewRender =>array(
@@ -220,9 +237,41 @@ Model::model()->productCount
 
 ```
 
+## 目录结构
+
+- components: 功能独立的组件库
+- vendors: 第三方库
+- extensions: Yii原生类的拓展
+- classes: 业务逻辑及其它类
 
 
 
 ##Debug
 
 * **推荐**使用Yii::trace作为主要的debug断点调试工具（预防exit die之类的忘记删除）
+
+## Code Guide
+- **禁止**使用@屏蔽错误
+- **建议**字符串使用单引号包裹
+- 定义和使用数组时, key值**必须**用单引号包裹
+- 使用常量**必须**先做defined判断
+```
+if( defined('MENU_VERSION' ) && MENU_VERSION){
+}
+```
+- 变量名**必须**表明其含义, **禁止**使用意义不明的缩写
+
+```
+$productPrice;
+$p_r; //禁止
+```
+- 变量使用之前**必须**定义, 在条件语句中定义的变量**建议**, 在if之前提前申明
+```
+$a=''; //提前申明
+if ($condition) {
+ $a = 'value';
+}
+$b = $a;
+```
+- 复杂逻辑的函数和方法**必须**添加注释
+- 每一小段逻辑之间**建议**使用空行分割

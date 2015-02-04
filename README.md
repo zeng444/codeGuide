@@ -21,9 +21,9 @@
 - 对接收的数据处理，**必须**使用YII提供的方法，预防变量unset抛出的notice错误
 
 ```
-Yii::app()->getQuery("id");
-Yii::app()->postQuery("id");
-Yii::app()->getParam("id");
+Yii::app()->getRequest()->getQuery("id");
+Yii::app()->getRequest()->postQuery("id");
+Yii::app()->getRequest()->getParam("id");
 ```
 - 禁止在析构和构造函数内获取任何模型数据同理包括beforeAcion afterAction(难以扩展，API接口重灾区)
 - 对$_SERVERS全局变量的处理，**建议**使用Yii::app->request对象下的方法
